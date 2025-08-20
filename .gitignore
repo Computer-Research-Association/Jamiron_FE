@@ -1,0 +1,42 @@
+# 🔐 환경 변수 파일
+.env
+
+# 🐍 가상환경 폴더
+.venv/
+env/
+venv/
+
+# 🗃️ 캐시/컴파일 결과
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 🧪 테스트 결과
+*.log
+*.coverage
+.cache/
+coverage.xml
+
+# 📦 빌드 결과 (PyInstaller)
+dist/
+build/
+*.spec
+
+# 📂 사용자 설정, IDE 파일
+.vscode/
+.idea/
+*.swp
+
+# 📁 데이터/모델 (원하면 유지 가능)
+data/
+models/*.pkl
+
+# 📂 분류된 결과물 (자동 생성된 파일들)
+final_sorted_files/
+watch_folder/
+
+# 💾 기타
+.DS_Store
+Thumbs.db
+old
