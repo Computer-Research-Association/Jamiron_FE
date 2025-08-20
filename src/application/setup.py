@@ -9,12 +9,15 @@ from src.domain.classification.classifier_manager import ClassifierManager
 from src.domain.data_collector.syllabus_collector import SyllabusCollector
 from src.utils.file_system.file_handler import FileHandler
 
+from src.application.request_controller import LoginRequest
+
 
 class SetupController:
     def __init__(self, settings: ProjectSettings, classifier_manager: ClassifierManager):
         self.settings = settings
         self.classifier_manager = classifier_manager
         self.file_handler = FileHandler()
+        self.login_request = LoginRequest()
         self.collector = None
         self.classes_list = []
 
@@ -45,16 +48,17 @@ class SetupController:
         try:
             self._cleanup_existing_syllabus(progress_callback)
             self.collector = SyllabusCollector(progress_callback=progress_callback)
-            login_success = self.collector.login(user_id, password)
+            login_success = self.login_request.login(user_id, password, year, hakgi)
+            # login_success = self.collector.login(user_id, password)
             if not login_success:
                 return None
 
-            navigate_success = self.collector.navigate_to_planner_page(year, hakgi)
-            if not navigate_success:
-                return None
+            # navigate_success = self.collector.navigate_to_planner_page(year, hakgi)
+            # if not navigate_success:
+            #     return None
 
             self.settings.save_login_data(user_id, password, year, hakgi)
-            self.collector.download_planners()
+            # self.collector.download_planners()
 
             syllabus_dir = self.settings.get_path("syllabus_dir")
             self.classes_list = self.file_handler.get_classes_list_from_json(syllabus_dir)

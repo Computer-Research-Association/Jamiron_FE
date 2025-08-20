@@ -47,3 +47,4 @@ src/Output
 src/Processed
 src/ToBeSorted
 *.bat
+test/

@@ -4,11 +4,10 @@ from src.utils.file_process.preprocessor import Preprocessor
 from src.utils.file_process.translator import TextTranslator
 from src.utils.file_system.file_extractor import FileExtractor
 from src.utils.file_system.file_handler import FileHandler
-from src.utils.file_system.file_watcher import FileWatcher
 from src.domain.classification.classifier_manager import ClassifierManager
 
 class PipelineController:
-    def __init__(self, file_extractor: FileExtractor,  file_watcher: FileWatcher,
+    def __init__(self, file_extractor: FileExtractor,
                  file_handler: FileHandler, preprocessor: Preprocessor, translator: TextTranslator,
                  classifier: ClassifierManager):
 
@@ -16,7 +15,6 @@ class PipelineController:
         self.classifier = classifier
         self.translator = translator
         self.file_extractor = file_extractor
-        self.file_watcher = file_watcher
         self.file_handler = file_handler
 
         self.file_data_list: List[Dict[str, str]] = []
@@ -34,9 +32,6 @@ class PipelineController:
     def start_pipeline(self):
       
         print("========"*30)
-
-        # 감시자 시작
-        self.file_watcher.start_watching()
 
         # 폴더 경로 받아서
         folder_path = "data/syllabus"
