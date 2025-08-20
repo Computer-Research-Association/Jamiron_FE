@@ -39,4 +39,11 @@ watch_folder/
 # 💾 기타
 .DS_Store
 Thumbs.db
-old
+old/
+src/data
+src/logs
+src/models
+src/Output
+src/Processed
+src/ToBeSorted
+*.bat
