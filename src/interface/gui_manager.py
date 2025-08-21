@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QTreeWidget,
     QTreeWidgetItem,
+    QMessageBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
 from .styles import get_dark_theme, get_light_theme
@@ -51,6 +52,7 @@ class UIManager(QObject):
         self.coordinator.signals.show_screen.connect(self.show_screen)
         self.coordinator.signals.login_result.connect(self.on_login_result)
         self.coordinator.signals.class_selection_required.connect(self.show_class_selection)
+        self.coordinator.signals.semester_selection_required.connect(self.show_semester_selection)
         self.coordinator.signals.model_generation_complete.connect(self.on_model_generation_complete)
         self.coordinator.signals.main_menu_status.connect(self.update_main_menu_status)
         self.coordinator.signals.exploration_status.connect(self.update_exploration_status)
@@ -63,7 +65,7 @@ class UIManager(QObject):
         main_menu.login_button.clicked.connect(lambda: self.show_screen("login"))
         main_menu.classified_folder_button.clicked.connect(self.prompt_for_classified_output_folder)
         main_menu.unclassified_folder_button.clicked.connect(self.prompt_for_unclassified_input_folder)
-        main_menu.explore_button.clicked.connect(self.coordinator.start_file_exploration)
+        # main_menu.explore_button.clicked.connect(self.coordinator.start_file_exploration)
         main_menu.stop_button.clicked.connect(self.coordinator.stop_file_exploration)
 
         login_screen = self.app.main_window.login_screen
@@ -166,6 +168,10 @@ class UIManager(QObject):
         self.year_changed.emit(year)
 
     def set_hakgi(self, hakgi):
+        if hakgi == 'Summer':
+            hakgi = '3'
+        elif hakgi == 'Winter':
+            hakgi = '4'
         self.hakgi = hakgi
         self.hakgi_changed.emit(hakgi)
 
@@ -211,6 +217,53 @@ class UIManager(QObject):
         dialog.setLayout(layout)
         self.dialog = dialog
         dialog.exec_()
+    
+    def show_semester_selection(self, semesters_list):
+        self.selected_semester = set()
+        self.semesters_list = semesters_list  # 참조용으로 저장
+        dialog = QDialog(self.app.main_window)
+        dialog.setWindowTitle("Select Semester to Adapt")
+        layout = QVBoxLayout()
+
+        # 학기 선택 안내 라벨 추가
+        label = QLabel("학기를 선택해주세요:")
+        layout.addWidget(label)
+
+        checkboxes = []
+        
+        # 각 학기별 체크박스 생성
+        for idx, (year, hakgi) in enumerate(semesters_list):
+            semester_str = f"{year}-{hakgi}"
+            checkbox = QCheckBox(semester_str)
+            checkbox.stateChanged.connect(lambda state, semester=semester_str: self.toggle_semester(semester, state))
+            layout.addWidget(checkbox)
+            checkboxes.append(checkbox)
+
+        # 버튼 박스
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(lambda: self.on_semester_selection_ok(dialog))
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+        
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def toggle_semester(self, semester_str, state):
+        """학기 선택/해제를 처리하는 메서드"""
+        if state == 2:  # Qt.Checked
+            self.selected_semester.add(semester_str)
+        else:  # Qt.Unchecked
+            self.selected_semester.discard(semester_str)
+
+    def on_semester_selection_ok(self, dialog):
+        """OK 버튼 클릭 시 처리"""
+        if self.selected_semester:  # 선택된 학기가 있는 경우에만
+            self.coordinator.start_file_exploration(self.selected_semester)
+            dialog.accept()
+        else:
+            # 선택된 학기가 없으면 경고 메시지
+            QMessageBox.warning(dialog, "경고", "최소 하나의 학기를 선택해주세요.")
+        
 
     def toggle_all_classes(self, checkboxes, state, button):
         for checkbox in checkboxes: checkbox.setChecked(state)

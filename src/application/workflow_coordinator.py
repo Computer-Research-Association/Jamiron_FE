@@ -8,6 +8,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool
 
 from src.application.setup import SetupController
 from src.application.workers import Worker
+from src.application.request_controller import ClassifierRequest
 from src.config.settings import ProjectSettings
 from src.domain.classification.classifier_manager import ClassifierManager
 from src.utils.file_system.file_handler import FileHandler
@@ -22,6 +23,7 @@ class CoordinatorSignals(QObject):
     show_screen = pyqtSignal(str)  # "login", "main_menu", "progress"
     login_result = pyqtSignal(bool, str)  # success, message
     class_selection_required = pyqtSignal(list)
+    semester_selection_required = pyqtSignal(list)
     model_generation_complete = pyqtSignal()
     main_menu_status = pyqtSignal(dict)
     exploration_status = pyqtSignal(bool)  # is_running
@@ -35,6 +37,7 @@ class CoordinatorSignals(QObject):
     # --- From SetupController to Coordinator ---
     login_finished_signal = pyqtSignal(bool)
     class_selection_required_signal = pyqtSignal(list)
+    semester_selection_required_signal = pyqtSignal(list)
     model_generation_finished_signal = pyqtSignal()
 
 
@@ -49,6 +52,7 @@ class WorkflowCoordinator(QObject):
         self.file_handler = FileHandler()
         self.file_extractor = FileExtractor()
         self.preprocessor = Preprocessor()
+        self.classifier_request = None
         
         self.classifier_manager = classifier_manager
 
@@ -143,12 +147,40 @@ class WorkflowCoordinator(QObject):
         else:
             self.signals.show_screen.emit("main_menu")
 
-    def start_file_exploration(self):
+    def start_file_exploration(self, selected_semester):
         if not (self.classifier_manager and self.classifier_manager.rule_classifier and self.classifier_manager.ml_classifier):
             self.signals.progress.emit("오류: 분류 모델을 찾을 수 없습니다. 로그인부터 다시 진행해주세요.", 100, "progress_label", "main_menu_progress_bar")
             self.signals.exploration_status.emit(False)
             return
-
+        
+        selected_semester_data = []
+        
+        # 선택된 학기 문자열들을 처리
+        for semester_str in selected_semester:
+            selected_year, selected_hakgi = semester_str.split('-')
+        
+            try:
+                with open('syllabus.json', 'r', encoding='utf-8') as f:
+                    datas = json.load(f)
+                    
+                    for k in datas:
+                        if k['year'] == selected_year and k['hakgi'] == selected_hakgi:
+                            selected_semester_data.append(k)
+            except FileNotFoundError:
+                self.signals.progress.emit("오류: syllabus.json 파일을 찾을 수 없습니다.", 100, "progress_label", "main_menu_progress_bar")
+                self.signals.exploration_status.emit(False)
+                return
+            except json.JSONDecodeError:
+                self.signals.progress.emit("오류: syllabus.json 파일 형식이 올바르지 않습니다.", 100, "progress_label", "main_menu_progress_bar")
+                self.signals.exploration_status.emit(False)
+                return
+                    
+        if not selected_semester_data:
+            self.signals.progress.emit("선택된 학기에 해당하는 데이터를 찾을 수 없습니다.", 100, "progress_label", "main_menu_progress_bar")
+            self.signals.exploration_status.emit(False)
+            return
+            
+        self.classifier_manager.update_syllabus_data(selected_semester_data)
         unclassified_folder_path = self.settings.load_unclassified_input_folder_path()
         if not unclassified_folder_path:
             return
@@ -161,7 +193,7 @@ class WorkflowCoordinator(QObject):
     def stop_file_exploration(self):
         self.stop_event.set()
 
-    def on_scan_finished(self):
+    def on_scan_finished(self, progress_callback=None):
         file_data_list = []
         material_file_path = self.settings.get_path("material_file")
         if os.path.exists(material_file_path):
@@ -172,13 +204,19 @@ class WorkflowCoordinator(QObject):
              self.signals.progress.emit("분류할 파일이 없거나 작업이 중단되었습니다.", 100, "progress_label", "main_menu_progress_bar")
              self.signals.exploration_status.emit(False)
              return
-
-        classified_list = self.classifier_manager.run_pipeline(file_data_list)
+        self.classifier_request = ClassifierRequest(progress_callback=progress_callback)
+        classified_list = self.classifier_request.classify(file_data_list)
+        
+        if classified_list == False:
+            return
+        
+        # (아래 내용 -> BE)
+        # self.classifier_manager.run_pipeline(file_data_list)
 
         # 분류 결과 다시 저장 (필요하면)
-        self.file_handler.save_json(classified_list, material_file_path)
+        # self.file_handler.save_json(classified_list, material_file_path)
 
-        # 분류 계획 UI로 전달
+        # 분류 계획 UI로 전달 
         plan = self.classifier_manager.get_classification_plan()
         if not plan:
             self.signals.progress.emit("분류할 파일이 없거나 작업이 중단되었습니다.", 100, "progress_label", "main_menu_progress_bar")
@@ -211,6 +249,9 @@ class WorkflowCoordinator(QObject):
         self.signals.exploration_status.emit(False)
 
     def _scan_and_classify(self, folder_path):
+        def progress_callback(msg, percent):
+            self.signals.progress.emit(msg, percent, "progress_label", "progress_bar")
+            
         def scan_files():
             for root, _, files in os.walk(folder_path):
                 for file in files:
@@ -234,7 +275,7 @@ class WorkflowCoordinator(QObject):
             self.file_handler.save_json(all_materials, material_file_path)
             self.classifier_manager.classified_files = all_materials
             print(f"총 {len(all_materials)}개의 파일 정보를 material.json에 저장했습니다.")
-            self.on_scan_finished()
+            self.on_scan_finished(progress_callback=progress_callback)
         else:
             self.signals.exploration_status.emit(False)
 

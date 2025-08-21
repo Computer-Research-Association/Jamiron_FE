@@ -6,7 +6,7 @@ import shutil
 
 from src.config.settings import ProjectSettings
 from src.domain.classification.classifier_manager import ClassifierManager
-from src.domain.data_collector.syllabus_collector import SyllabusCollector
+# from src.domain.data_collector.syllabus_collector import SyllabusCollector
 from src.utils.file_system.file_handler import FileHandler
 
 from src.application.request_controller import LoginRequest
@@ -17,7 +17,7 @@ class SetupController:
         self.settings = settings
         self.classifier_manager = classifier_manager
         self.file_handler = FileHandler()
-        self.login_request = LoginRequest()
+        self.login_request = None
         self.collector = None
         self.classes_list = []
 
@@ -47,7 +47,9 @@ class SetupController:
     def login_and_collect(self, user_id: str, password: str, year: str, hakgi: str, progress_callback=None):
         try:
             self._cleanup_existing_syllabus(progress_callback)
-            self.collector = SyllabusCollector(progress_callback=progress_callback)
+            # self.collector = SyllabusCollector(progress_callback=progress_callback)
+            
+            self.login_request = LoginRequest(progress_callback=progress_callback)
             login_success = self.login_request.login(user_id, password, year, hakgi)
             # login_success = self.collector.login(user_id, password)
             if not login_success:
