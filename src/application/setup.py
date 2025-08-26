@@ -9,8 +9,7 @@ from src.domain.classification.classifier_manager import ClassifierManager
 # from src.domain.data_collector.syllabus_collector import SyllabusCollector
 from src.utils.file_system.file_handler import FileHandler
 
-from src.application.request_controller import LoginRequest
-
+from src.application.request_controller import SyllabusRequest
 
 class SetupController:
     def __init__(self, settings: ProjectSettings, classifier_manager: ClassifierManager):
@@ -49,21 +48,23 @@ class SetupController:
             self._cleanup_existing_syllabus(progress_callback)
             # self.collector = SyllabusCollector(progress_callback=progress_callback)
             
-            self.login_request = LoginRequest(progress_callback=progress_callback)
-            login_success = self.login_request.login(user_id, password, year, hakgi)
+            self.login_request = SyllabusRequest(progress_callback=progress_callback)
+            login_response = self.login_request.login(user_id, password, year, hakgi)
+            login_success = login_response[0]
+            login_msg = login_response[1]
+            self.classes_list = login_response[2]
             # login_success = self.collector.login(user_id, password)
             if not login_success:
                 return None
 
-            # navigate_success = self.collector.navigate_to_planner_page(year, hakgi)
-            # if not navigate_success:
-            #     return None
-
             self.settings.save_login_data(user_id, password, year, hakgi)
             # self.collector.download_planners()
-
-            syllabus_dir = self.settings.get_path("syllabus_dir")
-            self.classes_list = self.file_handler.get_classes_list_from_json(syllabus_dir)
+            
+            print(self.classes_list)
+            
+            self.classes_list = [list(d.values()) for d in self.classes_list]
+            print(self.classes_list)
+            
             return self.classes_list
 
         except Exception as e:
@@ -147,7 +148,7 @@ class SetupController:
                 with open(filepath, "r", encoding="utf-8") as f:
                     syllabus_data = json.load(f)
                 content_parts = [
-                    syllabus_data.get("title", ""), syllabus_data.get("objectives", ""),
+                    syllabus_data.get("class_name", ""), syllabus_data.get("objectives", ""),
                     syllabus_data.get("description", ""), syllabus_data.get("schedule", ""),
                 ]
                 full_content = " ".join(str(p) for p in content_parts if p).strip()

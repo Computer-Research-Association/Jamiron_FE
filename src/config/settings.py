@@ -35,6 +35,7 @@ class ProjectSettings:
         self.paths["log_dir"] = os.path.join(base_dir, "logs")
         self.paths["syllabus_file"] = os.path.join(
             base_dir, "data", "syllabus.json")
+        self.paths["session_file"] = os.path.join(base_dir, "data", "session_file.txt")
         self.paths["key_file"] = os.path.join(
             self.paths["data_dir"], "encryption.key")
         self.paths["material_file"] = os.path.join(

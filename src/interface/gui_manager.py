@@ -30,7 +30,7 @@ class UIManager(QObject):
         self.coordinator = coordinator
         self.year = ""
         self.hakgi = ""
-        self.selected_classes = set()
+        self.selected_classes = []
         self.dialog = None
 
         if self.is_dark_mode():
@@ -66,6 +66,7 @@ class UIManager(QObject):
         main_menu.classified_folder_button.clicked.connect(self.prompt_for_classified_output_folder)
         main_menu.unclassified_folder_button.clicked.connect(self.prompt_for_unclassified_input_folder)
         # main_menu.explore_button.clicked.connect(self.coordinator.start_file_exploration)
+        main_menu.explore_button.clicked.connect(self.start_semester_selection)
         main_menu.stop_button.clicked.connect(self.coordinator.stop_file_exploration)
 
         login_screen = self.app.main_window.login_screen
@@ -188,7 +189,7 @@ class UIManager(QObject):
             self.coordinator.set_unclassified_input_folder(path)
 
     def show_class_selection(self, classes_list):
-        self.selected_classes = set()
+        self.selected_classes = []
         dialog = QDialog(self.app.main_window)
         dialog.setWindowTitle("Select Classes to Download")
         layout = QVBoxLayout()
@@ -197,16 +198,21 @@ class UIManager(QObject):
         select_all_button = QPushButton("전체 선택")
         select_all_button.setCheckable(True)
         checkboxes = []
+        
+        # '전체 선택' 버튼 클릭 시 전체 클래스 목록을 toggle_all_classes 함수에 전달
         select_all_button.clicked.connect(
-            lambda checked: self.toggle_all_classes(checkboxes, checked, select_all_button)
+            lambda checked: self.toggle_all_classes(checkboxes, checked, classes_list, select_all_button)
         )
         button_layout.addWidget(select_all_button)
         button_layout.addStretch(1)
         layout.addLayout(button_layout)
-
-        for idx, (filename, name) in enumerate(classes_list):
-            checkbox = QCheckBox(name)
-            checkbox.stateChanged.connect(lambda state, idx=idx: self.toggle_class(idx, state))
+        
+        # classes_list의 요소가 리스트라고 가정하고 직접 참조
+        for class_data in classes_list:
+            # class_data는 ['코드', '이름', '교수'] 형태이므로 인덱스 1을 사용
+            checkbox = QCheckBox(class_data[1])
+            # lambda 함수를 통해 class_data(리스트 객체)와 state를 함께 전달
+            checkbox.stateChanged.connect(lambda state, data=class_data: self.toggle_class(data, state))
             layout.addWidget(checkbox)
             checkboxes.append(checkbox)
 
@@ -217,9 +223,37 @@ class UIManager(QObject):
         dialog.setLayout(layout)
         self.dialog = dialog
         dialog.exec_()
-    
+        
+    def toggle_all_classes(self, checkboxes, state, classes_list, button):
+        if state:
+            # classes_list의 요소가 리스트이므로 frozenset으로 변환하여 저장
+            self.selected_classes = classes_list
+        else:
+            self.selected_classes = []
+        
+        for checkbox in checkboxes:
+            checkbox.setChecked(state)
+
+        button.setText("전체 해제" if state else "전체 선택")
+
+    def toggle_class(self, class_data, state):
+        # 전달된 class_data가 리스트인지 확인
+        if not isinstance(class_data, list):
+            print("경고: 리스트 객체가 아닌 데이터가 전달되었습니다.")
+            return
+
+        # 리스트(class_data)를 frozenset으로 변환하여 추가/삭제
+        item_to_add = class_data
+        if state == Qt.Checked:
+            self.selected_classes.append(item_to_add)
+        else:
+            self.selected_classes.remove(item_to_add)
+            
+    def start_semester_selection(self):
+        self.show_semester_selection([[self.year, self.hakgi]])
+        
     def show_semester_selection(self, semesters_list):
-        self.selected_semester = set()
+        self.selected_semester = []
         self.semesters_list = semesters_list  # 참조용으로 저장
         dialog = QDialog(self.app.main_window)
         dialog.setWindowTitle("Select Semester to Adapt")
@@ -263,15 +297,6 @@ class UIManager(QObject):
         else:
             # 선택된 학기가 없으면 경고 메시지
             QMessageBox.warning(dialog, "경고", "최소 하나의 학기를 선택해주세요.")
-        
-
-    def toggle_all_classes(self, checkboxes, state, button):
-        for checkbox in checkboxes: checkbox.setChecked(state)
-        button.setText("전체 해제" if state else "전체 선택")
-
-    def toggle_class(self, idx, state):
-        if state == Qt.Checked: self.selected_classes.add(idx)
-        else: self.selected_classes.discard(idx)
 
     def thread_safe_update_progress(self, msg, percent, label_id="progress_label", bar_id="progress_bar"):
         QTimer.singleShot(0, lambda: self.update_progress(msg, percent, label_id, bar_id))

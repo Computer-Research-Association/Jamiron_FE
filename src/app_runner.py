@@ -23,6 +23,8 @@ from src.domain.classification.classifier_manager import ClassifierManager
 from src.domain.classification.rule_based_classifier import RuleBasedClassifier
 from src.domain.classification.ml_classifier import MLClassifier
 
+from src.application.request_controller import LoginRequest
+
 
 class MainApp:
     """메인 애플리케이션 클래스 - 모든 컴포넌트를 연결하고 관리"""
@@ -140,6 +142,13 @@ class MainApp:
         self.show_main_menu_screen()
         print("GUI 이벤트 루프 시작")
         sys.exit(self.app.exec_())
+        
+    def isSession(self):
+        login_request = LoginRequest()
+        session_path = self.settings.get_path("session_file")
+        with open(session_path) as f:
+            f.readline()
+        login_request.login()
 
     def _initialize_app_state(self):
         """애플리케이션 초기 상태 설정"""
