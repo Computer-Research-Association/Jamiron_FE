@@ -133,27 +133,50 @@ class UserRequest:
         
 class ClassifierRequest:
     def __init__(self, progress_callback=None):
-        self.uri = URL + '/api/classifier'
+        self.uri = URL + '/api/classifier/classify'
         self.progress_callback = progress_callback
         
     def update_progress(self, message: str, percent: int):
         if self.progress_callback:
             self.progress_callback(message, percent)
 
-    def classify(self, file_data_list):
+    def classify(self, user_id, year, hakgi, file_data_list):
         try:
             self.update_progress("분류 작업 요청 중...", 5)
             
-            response = requests.post(self.uri, json=file_data_list, timeout=120)
+            params = {
+                'user_id': user_id,
+                'year': year,
+                'semester': hakgi,
+            }
+            
+            # file_data_list = file_data_list[0]
+            
+            # payload = [{
+            #     'file_name': file_data_list['file_name'],
+            #     'ml_content': file_data_list['ml_content'],
+            #     'rule_based_content':  file_data_list['rule_based_content'],
+            #     'label': 'unclassified'
+            # }]
+            
+            payload = file_data_list
+            
+            # print(payload)
+            
+            response = requests.post(self.uri, params=params, json=payload)
             response.raise_for_status()
 
             res_data = response.json()
+            
+            print(res_data)
             
             msg = res_data.get("msg", "분류 완료")
             percent = res_data.get("percent", 100)
             self.update_progress(msg, percent)
             
-            return res_data
+            print(res_data.get('file_data_list'))
+            
+            return res_data.get('file_data_list')
 
         except requests.exceptions.HTTPError as e:
             print(f"HTTP 오류 발생: {e.response.status_code} - {e.response.text}")

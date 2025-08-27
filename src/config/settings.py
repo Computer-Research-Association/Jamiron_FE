@@ -84,10 +84,6 @@ class ProjectSettings:
         encrypted_id = self.fernet.encrypt(
             id_val.encode("utf-8")).decode("utf-8")
 
-        # 2. 비밀번호 해싱
-        hashed_pw = bcrypt.hashpw(pw_val.encode(
-            "utf-8"), bcrypt.gensalt()).decode("utf-8")
-
         data = {
             "id": encrypted_id,
             "pw": "",  # 해싱된 비밀번호 저장

@@ -35,8 +35,8 @@ class ClassifierManager:
 
     def get_classification_plan(self):
         plan = {}
-        if not hasattr(self, 'classified_files') or not self.classified_files:
-            return plan
+        # if not hasattr(self, 'classified_files') or not self.classified_files:
+        #     return plan
             
         def get_output_folder_for_label(label):
             base_path = self.settings.load_classified_output_folder_path()
@@ -48,7 +48,7 @@ class ClassifierManager:
         for file_data in self.classified_files:
             label = file_data.get('label')
             if label and label != 'unclassified':
-                plan[file_data['file_path']] = get_output_folder_for_label(label)
+                plan[file_data['file_name']] = get_output_folder_for_label(label)
         return plan
       
     def run_pipeline(self, file_data_list: List[Dict[str, str]]) -> List[Dict[str, str]]:

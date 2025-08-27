@@ -5,16 +5,14 @@ import re
 import shutil
 
 from src.config.settings import ProjectSettings
-from src.domain.classification.classifier_manager import ClassifierManager
 # from src.domain.data_collector.syllabus_collector import SyllabusCollector
 from src.utils.file_system.file_handler import FileHandler
 
 from src.application.request_controller import SyllabusRequest
 
 class SetupController:
-    def __init__(self, settings: ProjectSettings, classifier_manager: ClassifierManager):
+    def __init__(self, settings: ProjectSettings):
         self.settings = settings
-        self.classifier_manager = classifier_manager
         self.file_handler = FileHandler()
         self.login_request = None
         self.collector = None
@@ -60,8 +58,6 @@ class SetupController:
             self.settings.save_login_data(user_id, password, year, hakgi)
             # self.collector.download_planners()
             
-            print(self.classes_list)
-            
             self.classes_list = [list(d.values()) for d in self.classes_list]
             print(self.classes_list)
             
@@ -82,12 +78,7 @@ class SetupController:
     def generate_model_from_selection(self, selected_indices: list, progress_callback=None):
         try:
             self._cleanup_unselected_syllabuses(selected_indices, progress_callback)
-            selected_syllabus_data = self._prepare_model_data(selected_indices, progress_callback)
-
-            if self.classifier_manager:
-                if progress_callback: progress_callback("분류 모델 생성 중...", 95)
-                self.classifier_manager.generate_and_save_syllabus_model(selected_syllabus_data)
-
+            print("모든 처리 완료")
             if progress_callback: progress_callback("모든 처리 완료", 100)
 
         except Exception as e:

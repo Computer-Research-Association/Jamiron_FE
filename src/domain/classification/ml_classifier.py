@@ -65,7 +65,7 @@ class MLClassifier:
     """Sentence-BERT 모델과 코사인 유사도를 기반으로 텍스트를 분류합니다."""
 
     def __init__(self, syllabus: List[Dict[str, str]], model_name: str = 'sentence-transformers/all-mpnet-base-v2'):
-        self.model = self._load_sentence_bert_model(model_name)
+        # self.model = self._load_sentence_bert_model(model_name)
         self.reference_data = transform_syllabus_to_classifier_format(syllabus)
         self.reference_data = self._embed_reference_data(self.reference_data)
         if not self.reference_data:

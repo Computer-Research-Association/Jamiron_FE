@@ -68,18 +68,18 @@ class MainApp:
 
         # 2. 분류기 및 관리자 설정 (두 번째 코드 블록 로직 통합)
         # syllabus_collector에서 수집한 강의 계획서 데이터 로드
-        syllabus_data_list = self._load_syllabus_data()
+        # syllabus_data_list = self._load_syllabus_data()
 
-        # 분류기 인스턴스 생성
-        rule_classifier = RuleBasedClassifier(syllabus=syllabus_data_list)
-        ml_classifier = MLClassifier(syllabus=syllabus_data_list)
+        # # 분류기 인스턴스 생성
+        # rule_classifier = RuleBasedClassifier(syllabus=syllabus_data_list)
+        # ml_classifier = MLClassifier(syllabus=syllabus_data_list)
 
         # 분류 관리자 생성 (의존성 주입)
-        self.classifier_manager = ClassifierManager(
-            rule_classifier=rule_classifier,
-            ml_classifier=ml_classifier,
-            settings=self.settings,
-        )
+        # self.classifier_manager = ClassifierManager(
+        #     rule_classifier=rule_classifier,
+        #     ml_classifier=ml_classifier,
+        #     settings=self.settings,
+        # )
 
         # 3. 메인 윈도우 (UI 객체)
         self.main_window = GUIInterface(self)
@@ -92,7 +92,7 @@ class MainApp:
         # 4. 워크플로우 코디네이터 (로직) - 수정된 부분
         # 생성된 ClassifierManager를 주입
         self.workflow_coordinator = WorkflowCoordinator(
-            self.settings, self.classifier_manager
+            self.settings
         )
 
         # 5. UI 관리자 (UI와 로직 연결)
