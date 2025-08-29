@@ -6,28 +6,34 @@ from PyQt5.QtWidgets import (
     QLabel,
     QGridLayout,
     QLineEdit,
-    QComboBox
+    QComboBox,
+    QHBoxLayout
 )
 
 from PyQt5.QtCore import Qt
 import datetime
 
+from src.interface.loadingBar import LoadingIndicator
+
 class LoginScreen(QWidget):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.loadingIndicator = LoadingIndicator()
         self.init_ui()
 
     def init_ui(self):
         main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignCenter)
+        main_layout.setAlignment(Qt.AlignCenter)  # 수직 중앙 정렬
         self.setLayout(main_layout)
 
+        # 타이틀 레이블
         title_label = QLabel("로그인")
         title_label.setObjectName("title_label")
         title_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title_label)
 
+        # 폼 레이아웃
         form_layout = QGridLayout()
         form_layout.setSpacing(15)
         main_layout.addLayout(form_layout)
@@ -60,29 +66,35 @@ class LoginScreen(QWidget):
         else:
             current_hakgi = "2"
         self.hakgi_combo = QComboBox()
-        index = self.hakgi_combo.findText(current_hakgi)
-        self.hakgi_combo.setCurrentIndex(index)
         self.hakgi_combo.addItems(["1", "2", "Summer", "Winter"])
-        form_layout.addWidget(self.hakgi_combo, 3, 1)
         index = self.hakgi_combo.findText(current_hakgi)
-        self.hakgi_combo.setCurrentIndex(index)
+        if index >= 0:
+            self.hakgi_combo.setCurrentIndex(index)
+        form_layout.addWidget(self.hakgi_combo, 3, 1)
 
+        # 로그인 버튼
         self.login_button = QPushButton("로그인")
         main_layout.addWidget(self.login_button)
 
+        # 로그인 데이터 로드
         self.load_login_data()
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMaximum(100)
-        self.progress_bar.setValue(0)
-        main_layout.addWidget(self.progress_bar)
+        # 로딩 인디케이터를 위한 수평 레이아웃 (좌우 중앙 정렬)
+        loading_layout = QHBoxLayout()
+        loading_layout.setAlignment(Qt.AlignCenter)  # 좌우 중앙 정렬
+        self.progress_bar = self.loadingIndicator
+        self.progress_bar.setVisible(False)
+        loading_layout.addWidget(self.progress_bar)
+        main_layout.addLayout(loading_layout)
 
+        # 진행 상황 레이블
         self.progress_label = QLabel("")
         self.progress_label.setAlignment(Qt.AlignCenter)
         self.progress_label.setWordWrap(True)
         self.progress_label.setFixedHeight(120)
         main_layout.addWidget(self.progress_label)
 
+        # 폴더 선택 버튼
         self.select_folder_button = QPushButton("폴더 선택")
         self.select_folder_button.setVisible(False)
         main_layout.addWidget(self.select_folder_button)
@@ -91,11 +103,9 @@ class LoginScreen(QWidget):
         login_data = self.app.settings.load_login_data()
         if login_data:
             self.id_input.setText(login_data.get("id", ""))
-            
             year = str(login_data.get("year", ""))
             if year in [self.year_combo.itemText(i) for i in range(self.year_combo.count())]:
                 self.year_combo.setCurrentText(year)
-            
             hakgi = login_data.get("hakgi", "")
             if hakgi in [self.hakgi_combo.itemText(i) for i in range(self.hakgi_combo.count())]:
                 self.hakgi_combo.setCurrentText(hakgi)

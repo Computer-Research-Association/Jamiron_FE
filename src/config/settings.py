@@ -4,7 +4,6 @@ from cryptography.fernet import Fernet
 import bcrypt
 from dotenv import load_dotenv
 
-
 class ProjectSettings:
     def __init__(self):
         self.paths = {}
@@ -14,6 +13,7 @@ class ProjectSettings:
         self.load_config_values()
         self.key = self.manage_key()
         self.fernet = Fernet(self.key)
+        self.session_status = False
 
     def load_env_variables(self):
         """
@@ -30,7 +30,6 @@ class ProjectSettings:
         self.paths["data_dir"] = os.path.join(base_dir, "data")
         self.paths["config_file"] = os.path.join(
             base_dir, "data", "config.json")
-        self.paths["syllabus_dir"] = os.path.join(base_dir, "data", "syllabus")
         self.paths["model_dir"] = os.path.join(base_dir, "models")
         self.paths["log_dir"] = os.path.join(base_dir, "logs")
         self.paths["syllabus_file"] = os.path.join(
@@ -64,6 +63,9 @@ class ProjectSettings:
             "max_retries": 3,  # 번역 실패 시 재시도 횟수
             "cleanup_on_start": True,  # 시작 시 이전 번역 결과 정리
         }
+    
+    def manage_session(self, status):
+        self.session_status = status
 
     def manage_key(self):
         key_file_path = self.paths["key_file"]
@@ -76,25 +78,27 @@ class ProjectSettings:
                 key_file.write(key)
         return key
 
-    def save_login_data(self, id_val, pw_val, year_val, hakgi_val):
+    def save_login_data(self):
         """
         ID는 암호화하고 비밀번호는 해싱하여 로그인 데이터를 저장함.
         """
         # 1. ID 암호화
-        encrypted_id = self.fernet.encrypt(
-            id_val.encode("utf-8")).decode("utf-8")
+        # encrypted_id = self.fernet.encrypt(
+        #     id_val.encode("utf-8")).decode("utf-8")
 
-        data = {
-            "id": encrypted_id,
-            "pw": "",  # 해싱된 비밀번호 저장
-            "year": year_val,
-            "hakgi": hakgi_val,
-        }
+        # data = {
+        #     "id": encrypted_id,
+        #     "pw": "",  # 해싱된 비밀번호 저장
+        #     "year": year_val,
+        #     "hakgi": hakgi_val,
+        # }
 
-        login_data_file = os.path.join(
-            self.paths["data_dir"], "login_data.json")
-        with open(login_data_file, "w", encoding="utf-8") as f:
-            json.dump(data, f)
+        # login_data_file = os.path.join(
+        #     self.paths["data_dir"], "login_data.json")
+        # with open(login_data_file, "w", encoding="utf-8") as f:
+        #     json.dump(data, f)
+        
+        self.coordinator.get_main_menu_status(True)
 
     def load_login_data(self):
         """

@@ -16,6 +16,8 @@ from src.utils.file_process.translator import TextTranslator
 from src.utils.file_process.preprocessor import Preprocessor
 
 from src.application.request_controller import UserRequest
+from src.application.request_controller import LoginRequest
+from src.application.request_controller import SessionRequest
 
 
 class CoordinatorSignals(QObject):
@@ -62,13 +64,39 @@ class WorkflowCoordinator(QObject):
         self.stop_event = threading.Event()
         self.processed_steps = 0
         
+        self.login_request = LoginRequest()
+        
         self.user_id = ''
         self.year = ''
         self.hakgi = ''
+        self.session_id = ''
+        
+        self.isLogin = False
         
         self.classified_list = []
+        
 
         self._connect_internal_signals()
+        
+    def login_session(self, user_id, password):
+        if self.get_session_id() and self.settings.session_status:
+            pass
+        else:
+            session_response = self.login_request.login(user_id, password)
+            print(session_response)
+            if session_response[0] and session_response[1]:
+                session_path = self.settings.get_path("session_file")
+                with open(session_path, "w") as f:            
+                    f.write(session_response[2])
+            else:
+                print("오류")
+        
+    def get_session_id(self):
+        self.session_path = self.settings.get_path("session_file")
+        if os.path.isfile(self.session_path):
+            return self.file_extractor.extract_one_page(self.session_path)
+        else:
+            return ""
         
     def get_classification_plan(self, classified_files):
         plan = {}
@@ -109,13 +137,15 @@ class WorkflowCoordinator(QObject):
         self.user_id = id_val
         self.year = year_val
         self.hakgi = hakgi_val
+        self.session_id = self.get_session_id()
         
-        worker = Worker(self.setup_controller.login_and_collect, id_val, pw_val, year_val, hakgi_val, progress_callback=progress_callback)
+        worker = Worker(self.setup_controller.login_and_collect, self.session_id, id_val, pw_val, year_val, hakgi_val, progress_callback=progress_callback)
         
         worker.signals.result.connect(self.on_login_finished)
         worker.signals.error.connect(self.on_login_error)
         
         self.threadpool.start(worker)
+        self.request_main_menu_login_status()
 
     def on_login_finished(self, classes_list):
         """로그인 및 데이터 수집 성공 시 호출"""
@@ -156,7 +186,6 @@ class WorkflowCoordinator(QObject):
         
         # frozenset의 요소들을 딕셔너리로 변환
         for item in selected_indices:
-            syllabus_dict = {}
             # frozenset을 다시 리스트로 변환
             # 순서는 보장되지 않으므로, 이 부분을 수정해야 함
             
@@ -169,7 +198,9 @@ class WorkflowCoordinator(QObject):
             #     'class_name': class_list[1],
             #     'professor_name': class_list[2]
             # }
-            syllabus_dict[class_list[0]] = class_list[2]
+            syllabus_dict = {class_list[0] : class_list[1]}
+            
+            print(syllabus_dict)
             
             syllabuses_data.update(syllabus_dict)
         
@@ -185,7 +216,10 @@ class WorkflowCoordinator(QObject):
         # class_code = selected_classes_list[0].get('class_code')
         # professor_name = selected_classes_list[0].get('professor_name')
         
-        user_response = self.user_request.post_data(self.user_id, syllabuses_data, self.year, self.hakgi)
+        
+        self.session_id = self.get_session_id()
+        
+        user_response = self.user_request.post_data(self.session_id, self.user_id, syllabuses_data, self.year, self.hakgi)
         
         if not user_response:
             return None
@@ -277,7 +311,10 @@ class WorkflowCoordinator(QObject):
              self.signals.exploration_status.emit(False)
              return
         self.classifier_request = ClassifierRequest(progress_callback=progress_callback)
-        classified_list = self.classifier_request.classify(self.user_id, self.year, self.hakgi, file_data_list)
+        
+        self.session_id = self.get_session_id()
+        print(self.session_id)
+        classified_list = self.classifier_request.classify(self.session_id, self.user_id, self.year, self.hakgi, file_data_list)
         
         if classified_list == False:
             return
@@ -310,8 +347,8 @@ class WorkflowCoordinator(QObject):
         self.signals.exploration_status.emit(False)
 
     def cancel_classification(self):
-        if hasattr(self.classifier_manager, 'clear_plan'):
-            self.classifier_manager.clear_plan()
+        # if hasattr(self.classifier_manager, 'clear_plan'):
+        self.clear_plan()
         self.signals.progress.emit("작업이 취소되었습니다.", 0, "progress_label", "main_menu_progress_bar")
         self.signals.exploration_status.emit(False)
 
@@ -366,6 +403,7 @@ class WorkflowCoordinator(QObject):
             if full_content and full_content.strip():
                 translator = TextTranslator()
                 translated_content = translator.translate_long_text(full_content)
+                preprocessed_content = self.preprocessor.preprocess_text(translated_content)
             
         except Exception as e:
             print(f"ERROR: File processing error for {file_path}: {e}")
@@ -373,7 +411,7 @@ class WorkflowCoordinator(QObject):
         material_data = {
             "file_name": os.path.basename(file_path),
             "label": "unclassified",
-            "ml_content": translated_content,
+            "ml_content": preprocessed_content,
             "rule_based_content": first_content,
             # "metadata": {
             #     "title": metadata.get("title"),
@@ -391,9 +429,9 @@ class WorkflowCoordinator(QObject):
             detailed_message, display_percent, "progress_label", "main_menu_progress_bar"
         )
 
-    def get_main_menu_status(self):
-        login_data = self.settings.load_login_data()
-        login_ok = bool(login_data and login_data.get("id"))
+    def get_main_menu_status(self, isLogin):
+        # login_data = self.settings.load_login_data()
+        login_ok = isLogin
         classified_folder_path = self.settings.load_classified_output_folder_path()
         classified_folder_ok = bool(classified_folder_path)
         unclassified_folder_path = self.settings.load_unclassified_input_folder_path()
@@ -406,7 +444,13 @@ class WorkflowCoordinator(QObject):
 
     def request_main_menu_status_update(self):
         """UI가 메인 메뉴 상태 업데이트를 요청할 때 호출"""
-        status = self.get_main_menu_status()
+        status = self.get_main_menu_status(self.isLogin)
+        self.signals.main_menu_status.emit(status)
+        
+    def request_main_menu_login_status(self):
+        self.isLogin = True
+        status = self.get_main_menu_status(self.isLogin)
+        self.request_main_menu_status_update()
         self.signals.main_menu_status.emit(status)
 
     def set_classified_output_folder(self, path):

@@ -41,13 +41,13 @@ class SetupController:
             except OSError as e:
                 print(f"Failed to delete {syllabus_json_path}. Reason: {e}")
 
-    def login_and_collect(self, user_id: str, password: str, year: str, hakgi: str, progress_callback=None):
+    def login_and_collect(self, session_id: str, user_id: str, password: str, year: str, hakgi: str, progress_callback=None):
         try:
             self._cleanup_existing_syllabus(progress_callback)
             # self.collector = SyllabusCollector(progress_callback=progress_callback)
             
             self.login_request = SyllabusRequest(progress_callback=progress_callback)
-            login_response = self.login_request.login(user_id, password, year, hakgi)
+            login_response = self.login_request.login(session_id, user_id, password, year, hakgi)
             login_success = login_response[0]
             login_msg = login_response[1]
             self.classes_list = login_response[2]
@@ -55,7 +55,7 @@ class SetupController:
             if not login_success:
                 return None
 
-            self.settings.save_login_data(user_id, password, year, hakgi)
+            # self.settings.save_login_data()
             # self.collector.download_planners()
             
             self.classes_list = [list(d.values()) for d in self.classes_list]

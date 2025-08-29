@@ -5,27 +5,32 @@ from PyQt5.QtWidgets import (
     QProgressBar,
     QLabel,
     QGridLayout,
+    QHBoxLayout
 )
 
 from PyQt5.QtCore import Qt
 
+from src.interface.loadingBar import LoadingIndicator
 
 class MainMenuScreen(QWidget):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.loadingIndicator = LoadingIndicator()
         self.init_ui()
 
     def init_ui(self):
         main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignCenter)
+        main_layout.setAlignment(Qt.AlignCenter)  # 수직 중앙 정렬
         self.setLayout(main_layout)
 
+        # 타이틀 레이블
         title_label = QLabel("Jamiron")
         title_label.setObjectName("title_label")
         title_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title_label)
 
+        # 버튼용 그리드 레이아웃
         grid_layout = QGridLayout()
         grid_layout.setSpacing(15)
         main_layout.addLayout(grid_layout)
@@ -47,16 +52,20 @@ class MainMenuScreen(QWidget):
         self.stop_button.setVisible(False)
         grid_layout.addWidget(self.stop_button, 3, 0, 1, 2)
 
+        # 상태 레이블
         self.status_label = QLabel("")
         self.status_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.status_label)
 
-        self.progress_bar = QProgressBar()
+        # 로딩 인디케이터를 위한 수평 레이아웃 (좌우 중앙 정렬)
+        loading_layout = QHBoxLayout()
+        loading_layout.setAlignment(Qt.AlignCenter)  # 좌우 중앙 정렬
+        self.progress_bar = self.loadingIndicator
         self.progress_bar.setVisible(False)
-        self.progress_bar.setMaximum(100)
-        self.progress_bar.setValue(0)
-        main_layout.addWidget(self.progress_bar)
+        loading_layout.addWidget(self.progress_bar)
+        main_layout.addLayout(loading_layout)
 
+        # 진행 상황 레이블
         self.progress_label = QLabel("")
         self.progress_label.setAlignment(Qt.AlignCenter)
         self.progress_label.setWordWrap(True)

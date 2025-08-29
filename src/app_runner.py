@@ -23,7 +23,7 @@ from src.domain.classification.classifier_manager import ClassifierManager
 from src.domain.classification.rule_based_classifier import RuleBasedClassifier
 from src.domain.classification.ml_classifier import MLClassifier
 
-from src.application.request_controller import LoginRequest
+from src.application.request_controller import SessionRequest
 
 
 class MainApp:
@@ -32,13 +32,28 @@ class MainApp:
     def __init__(self):
         # PyQt5 애플리케이션 초기화
         self.app = QApplication(sys.argv)
+        
+        self.settings = ProjectSettings()
+        
+        self.session_status = False
 
         # 1. 스플래시 화면 이미지 설정
         splash_pix = QPixmap("src/asset/splash_img.png")
-
+        
+        self.session_path = ''
+        
         # 2. QSplashScreen 인스턴스 생성
         self.splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
         self.splash.show()
+        
+        if self.isSession():
+            self.session_status = True
+            print("session ok")
+        else:
+            self.session_status = False
+            print("session not ok")
+            
+        self.settings.manage_session(self.session_status)
 
         # 폰트 설정
         self._setup_fonts()
@@ -64,7 +79,8 @@ class MainApp:
     def _initialize_components(self):
         """핵심 컴포넌트들을 의존성 순서에 맞게 초기화"""
         # 1. 설정 관리자
-        self.settings = ProjectSettings()
+        
+        self.settings.get_path("session_file")
 
         # 2. 분류기 및 관리자 설정 (두 번째 코드 블록 로직 통합)
         # syllabus_collector에서 수집한 강의 계획서 데이터 로드
@@ -136,7 +152,6 @@ class MainApp:
         print("메인 윈도우 표시 완료")
 
     def run(self):
-        """애플리케이션 실행"""
         print("Jamiron 애플리케이션 시작")
         self._initialize_app_state()
         self.show_main_menu_screen()
@@ -144,18 +159,27 @@ class MainApp:
         sys.exit(self.app.exec_())
         
     def isSession(self):
-        login_request = LoginRequest()
-        session_path = self.settings.get_path("session_file")
-        with open(session_path) as f:
-            f.readline()
-        login_request.login()
+        session_request = SessionRequest()
+        self.session_path = self.settings.get_path("session_file")
+        if os.path.isfile(self.session_path):
+            with open(self.session_path) as f:
+                session_id = f.readline()
+            print(session_id)
+            if session_request.login(session_id)[1]:
+                print("isSeesion True")
+                return True
+            else:
+                print("isSeesion False")
+                return False
+        else:
+            return False
 
     def _initialize_app_state(self):
         """애플리케이션 초기 상태 설정"""
         try:
-            login_data = self.settings.load_login_data()
-            if login_data and login_data.get("id"):
-                print(f"저장된 로그인 정보 로드: {login_data['id']}")
+            # login_data = self.settings.load_login_data()
+            # if login_data and login_data.get("id"):
+            #     print(f"저장된 로그인 정보 로드: {login_data['id']}")
             self.workflow_coordinator.request_main_menu_status_update()
         except Exception as e:
             print(f"초기 상태 설정 오류: {e}")

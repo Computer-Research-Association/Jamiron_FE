@@ -18,7 +18,6 @@ from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
 from .styles import get_dark_theme, get_light_theme
 import subprocess
 
-
 class UIManager(QObject):
     year_changed = pyqtSignal(str)
     hakgi_changed = pyqtSignal(str)
@@ -100,6 +99,8 @@ class UIManager(QObject):
 
         id_val = login_screen.id_input.text()
         pw_val = login_screen.pw_input.text()
+        
+        self.coordinator.login_session(id_val, pw_val)
         self.coordinator.login(id_val, pw_val, self.year, self.hakgi)
 
     def on_login_result(self, success, message):
@@ -189,39 +190,39 @@ class UIManager(QObject):
             self.coordinator.set_unclassified_input_folder(path)
 
     def show_class_selection(self, classes_list):
-        self.selected_classes = []
-        dialog = QDialog(self.app.main_window)
-        dialog.setWindowTitle("Select Classes to Download")
-        layout = QVBoxLayout()
+        self.selected_classes = classes_list
+        # dialog = QDialog(self.app.main_window)
+        # dialog.setWindowTitle("Select Classes to Download")
+        # layout = QVBoxLayout()
 
-        button_layout = QHBoxLayout()
-        select_all_button = QPushButton("전체 선택")
-        select_all_button.setCheckable(True)
-        checkboxes = []
+        # button_layout = QHBoxLayout()
+        # select_all_button = QPushButton("전체 선택")
+        # select_all_button.setCheckable(True)
+        # checkboxes = []
         
-        # '전체 선택' 버튼 클릭 시 전체 클래스 목록을 toggle_all_classes 함수에 전달
-        select_all_button.clicked.connect(
-            lambda checked: self.toggle_all_classes(checkboxes, checked, classes_list, select_all_button)
-        )
-        button_layout.addWidget(select_all_button)
-        button_layout.addStretch(1)
-        layout.addLayout(button_layout)
+        # # '전체 선택' 버튼 클릭 시 전체 클래스 목록을 toggle_all_classes 함수에 전달
+        # select_all_button.clicked.connect(
+        #     lambda checked: self.toggle_all_classes(checkboxes, checked, classes_list, select_all_button)
+        # )
+        # button_layout.addWidget(select_all_button)
+        # button_layout.addStretch(1)
+        # layout.addLayout(button_layout)
         
-        # classes_list의 요소가 리스트라고 가정하고 직접 참조
-        for class_data in classes_list:
-            checkbox = QCheckBox(class_data[2])
-            # lambda 함수를 통해 class_data(리스트 객체)와 state를 함께 전달
-            checkbox.stateChanged.connect(lambda state, data=class_data: self.toggle_class(data, state))
-            layout.addWidget(checkbox)
-            checkboxes.append(checkbox)
+        # # classes_list의 요소가 리스트라고 가정하고 직접 참조
+        # for class_data in classes_list:
+        #     checkbox = QCheckBox(class_data[2])
+        #     # lambda 함수를 통해 class_data(리스트 객체)와 state를 함께 전달
+        #     checkbox.stateChanged.connect(lambda state, data=class_data: self.toggle_class(data, state))
+        #     layout.addWidget(checkbox)
+        #     checkboxes.append(checkbox)
 
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-        button_box.accepted.connect(lambda: self.coordinator.confirm_class_selection(self.selected_classes))
-        button_box.accepted.connect(dialog.accept)
-        layout.addWidget(button_box)
-        dialog.setLayout(layout)
-        self.dialog = dialog
-        dialog.exec_()
+        # button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.coordinator.confirm_class_selection(self.selected_classes)
+        # button_box.accepted.connect(dialog.accept)
+        # layout.addWidget(button_box)
+        # dialog.setLayout(layout)
+        # self.dialog = dialog
+        # dialog.exec_()
         
     def toggle_all_classes(self, checkboxes, state, classes_list, button):
         if state:
@@ -311,7 +312,7 @@ class UIManager(QObject):
         if not label or not bar: return
 
         label.setText(msg)
-        if percent >= 0: bar.setValue(int(percent))
+        if percent >= 0: bar.setVisible(True)
         QApplication.processEvents()
 
     def toggle_theme(self):
