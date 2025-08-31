@@ -5,7 +5,6 @@ import re
 import shutil
 
 from src.config.settings import ProjectSettings
-# from src.domain.data_collector.syllabus_collector import SyllabusCollector
 from src.utils.file_system.file_handler import FileHandler
 
 from src.application.request_controller import SyllabusRequest
@@ -32,19 +31,18 @@ class SetupController:
                     elif os.path.isdir(file_path):
                         shutil.rmtree(file_path)
                 except Exception as e:
-                    print(f'Failed to delete {file_path}. Reason: {e}')
+                    pass
 
         syllabus_json_path = self.settings.get_path("syllabus_file")
         if os.path.exists(syllabus_json_path):
             try:
                 os.remove(syllabus_json_path)
             except OSError as e:
-                print(f"Failed to delete {syllabus_json_path}. Reason: {e}")
+                pass
 
     def login_and_collect(self, session_id: str, user_id: str, password: str, year: str, hakgi: str, progress_callback=None):
         try:
             self._cleanup_existing_syllabus(progress_callback)
-            # self.collector = SyllabusCollector(progress_callback=progress_callback)
             
             self.login_request = SyllabusRequest(progress_callback=progress_callback)
             login_response = self.login_request.login(session_id, user_id, password, year, hakgi)
@@ -55,11 +53,7 @@ class SetupController:
             if not login_success:
                 return None
 
-            # self.settings.save_login_data()
-            # self.collector.download_planners()
-            
             self.classes_list = [list(d.values()) for d in self.classes_list]
-            print(self.classes_list)
             
             return self.classes_list
 
@@ -78,7 +72,6 @@ class SetupController:
     def generate_model_from_selection(self, selected_indices: list, progress_callback=None):
         try:
             self._cleanup_unselected_syllabuses(selected_indices, progress_callback)
-            print("모든 처리 완료")
             if progress_callback: progress_callback("모든 처리 완료", 100)
 
         except Exception as e:
@@ -97,7 +90,7 @@ class SetupController:
                 try:
                     os.remove(f_path)
                 except OSError as e:
-                    print(f"파일 삭제 실패 {f_path}: {e}")
+                    pass
 
         self._update_main_syllabus_json(selected_indices, progress_callback)
         if progress_callback: progress_callback("강의 계획서 파일 정리 완료.", 30)
@@ -148,7 +141,7 @@ class SetupController:
                 if processed_content:
                     selected_syllabus_data.append((subject_name, processed_content))
             except Exception as e:
-                print(f"모델 데이터 준비 오류 ({filepath}): {e}")
+                pass
         return selected_syllabus_data
 
     def setup_folders(self, selected_indices: list, progress_callback=None):

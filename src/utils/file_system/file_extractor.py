@@ -18,7 +18,6 @@ class FileExtractor:
 
     def extract_text(self, file_path: str) -> str:
         if not os.path.exists(file_path):
-            print(f"파일을 찾을 수 없습니다: {file_path}")
             return ""
 
         try:
@@ -50,7 +49,6 @@ class FileExtractor:
             
             elif ext == ".pptx":
                 if not Presentation:
-                    print("python-pptx가 설치되지 않았습니다.")
                     return ""
                 
                 doc = Presentation(file_path)
@@ -68,7 +66,7 @@ class FileExtractor:
                         if len(slide_text.strip()) >= 10:
                             text_parts.append(slide_text)
                             pages_read += 1
-                # 작은 파일: 모든 페이지 읽기
+                
                 else:
                     for slide in doc.slides:
                         slide_text = " ".join([shape.text for shape in slide.shapes if hasattr(shape, "text")])
@@ -77,13 +75,11 @@ class FileExtractor:
 
             elif ext == ".docx":
                 if not Document:
-                    print("python-docx가 설치되지 않았습니다.")
                     return ""
                 
                 doc = Document(file_path)
                 total_paragraphs = len(doc.paragraphs)
                 
-                # 큰 파일: 홀수 페이지만 읽기 (최대 15페이지)
                 if total_paragraphs > 10:
                     pages_read = 0
                     max_pages = 15
@@ -94,7 +90,7 @@ class FileExtractor:
                         if len(paragraph_text.strip()) >= 10:
                             text_parts.append(paragraph_text)
                             pages_read += 1
-                # 작은 파일: 모든 페이지 읽기
+                            
                 else:
                     for paragraph in doc.paragraphs:
                         paragraph_text = paragraph.text
@@ -102,19 +98,15 @@ class FileExtractor:
                             text_parts.append(paragraph_text)
 
             else:
-                # 지원하지 않는 형식은 파일명만 반환
                 return os.path.basename(file_path)
 
             return "\n".join(text_parts)
 
         except Exception as e:
-            print(f"텍스트 추출 실패 {file_path}: {e}")
             return ""
 
     def extract_one_page(self, file_path: str) -> str:
-        """첫 번째 페이지/슬라이드의 텍스트만 추출합니다."""
         if not os.path.exists(file_path):
-            print(f"파일을 찾을 수 없습니다: {file_path}")
             return ""
 
         try:
@@ -128,7 +120,6 @@ class FileExtractor:
 
             elif ext == ".pptx":
                 if not Presentation:
-                    print("python-pptx가 설치되지 않았습니다.")
                     return ""
 
                 prs = Presentation(file_path)
@@ -143,7 +134,6 @@ class FileExtractor:
 
             elif ext == ".docx":
                 if not Document:
-                    print("python-docx가 설치되지 않았습니다.")
                     return ""
 
                 doc = Document(file_path)
@@ -159,42 +149,41 @@ class FileExtractor:
                 return os.path.basename(file_path)
 
         except Exception as e:
-            print(f"첫 페이지 추출 실패 {file_path}: {e}")
             return ""
 
-    def extract_metadata(self, file_path):
-        """파일에서 메타데이터를 추출합니다."""
-        metadata = {"author": "", "title": ""}
+    # def extract_metadata(self, file_path):
+    #     """파일에서 메타데이터를 추출합니다."""
+    #     metadata = {"author": "", "title": ""}
 
-        try:
-            ext = os.path.splitext(file_path)[1].lower()
+    #     try:
+    #         ext = os.path.splitext(file_path)[1].lower()
 
-            if ext == ".pdf":
-                import fitz
+    #         if ext == ".pdf":
+    #             import fitz
 
-                with fitz.open(file_path) as doc:
-                    pdf_metadata = doc.metadata
-                    metadata["author"] = pdf_metadata.get("author", "")
-                    metadata["title"] = pdf_metadata.get("title", "")
+    #             with fitz.open(file_path) as doc:
+    #                 pdf_metadata = doc.metadata
+    #                 metadata["author"] = pdf_metadata.get("author", "")
+    #                 metadata["title"] = pdf_metadata.get("title", "")
 
-            elif ext == ".pptx":
-                from pptx import Presentation
+    #         elif ext == ".pptx":
+    #             from pptx import Presentation
 
-                prs = Presentation(file_path)
-                core_props = prs.core_properties
-                metadata["author"] = core_props.author or ""
-                metadata["title"] = core_props.title or ""
+    #             prs = Presentation(file_path)
+    #             core_props = prs.core_properties
+    #             metadata["author"] = core_props.author or ""
+    #             metadata["title"] = core_props.title or ""
 
-            elif ext == ".docx":
-                from docx import Document
+    #         elif ext == ".docx":
+    #             from docx import Document
 
-                doc = Document(file_path)
-                core_props = doc.core_properties
-                metadata["author"] = doc.core_properties.author or ""
-                metadata["title"] = doc.core_properties.title or ""
+    #             doc = Document(file_path)
+    #             core_props = doc.core_properties
+    #             metadata["author"] = doc.core_properties.author or ""
+    #             metadata["title"] = doc.core_properties.title or ""
             
-            return metadata
+    #         return metadata
 
-        except Exception as e:
-            print(f"Error extracting metadata from {file_path}: {e}")
-            return metadata
+    #     except Exception as e:
+    #         print(f"Error extracting metadata from {file_path}: {e}")
+    #         return metadata

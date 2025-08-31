@@ -21,7 +21,6 @@ class TextTranslator:
                 return result.text.strip()
             return text
         except Exception as e:
-            print(f"번역 오류: {e}")
             return text
           
     def translate_long_text(self, text) -> str:
@@ -43,7 +42,6 @@ class TextTranslator:
                 translated_parts.append(chunk)
                 continue
 
-            # print(f"  청크 {i}/{len(chunks)} 번역 중...")
             translated_chunk = self._translate_with_retry(chunk, source, target)
             translated_parts.append(translated_chunk)
 
@@ -66,7 +64,6 @@ class TextTranslator:
 
             except Exception as e:
                 if attempt == self.max_retries - 1:
-                    print(f"번역 실패 (최대 재시도 초과): {e}")
                     return text
 
         return text

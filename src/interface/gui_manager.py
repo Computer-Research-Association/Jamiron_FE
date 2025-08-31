@@ -51,7 +51,6 @@ class UIManager(QObject):
         self.coordinator.signals.show_screen.connect(self.show_screen)
         self.coordinator.signals.login_result.connect(self.on_login_result)
         self.coordinator.signals.class_selection_required.connect(self.show_class_selection)
-        # self.coordinator.signals.semester_selection_required.connect(self.show_semester_selection)
         self.coordinator.signals.model_generation_complete.connect(self.on_model_generation_complete)
         self.coordinator.signals.main_menu_status.connect(self.update_main_menu_status)
         self.coordinator.signals.exploration_status.connect(self.update_exploration_status)
@@ -65,7 +64,6 @@ class UIManager(QObject):
         main_menu.classified_folder_button.clicked.connect(self.prompt_for_classified_output_folder)
         main_menu.unclassified_folder_button.clicked.connect(self.prompt_for_unclassified_input_folder)
         main_menu.explore_button.clicked.connect(self.coordinator.start_file_exploration)
-        # main_menu.explore_button.clicked.connect(self.start_semester_selection)
         main_menu.stop_button.clicked.connect(self.coordinator.stop_file_exploration)
 
         login_screen = self.app.main_window.login_screen
@@ -86,7 +84,6 @@ class UIManager(QObject):
         index = screen_map.get(screen_name)
         if index is not None:
             self.app.main_window.stacked_widget.setCurrentIndex(index)
-            print(f"📱 {screen_name} 화면으로 전환")
             if screen_name == "main_menu":
                 QTimer.singleShot(0, self.coordinator.request_main_menu_status_update)
 
@@ -129,10 +126,6 @@ class UIManager(QObject):
         main_menu.stop_button.setVisible(is_running)
         main_menu.progress_bar.setVisible(is_running)
         main_menu.progress_label.setVisible(is_running)
-        if not is_running:
-            main_menu.progress_bar.setValue(0)
-            main_menu.progress_label.setText("")
-            self.coordinator.request_main_menu_status_update()
 
     def show_classification_confirmation(self, plan):
         dialog = QDialog(self.app.main_window)
@@ -191,42 +184,10 @@ class UIManager(QObject):
 
     def show_class_selection(self, classes_list):
         self.selected_classes = classes_list
-        # dialog = QDialog(self.app.main_window)
-        # dialog.setWindowTitle("Select Classes to Download")
-        # layout = QVBoxLayout()
-
-        # button_layout = QHBoxLayout()
-        # select_all_button = QPushButton("전체 선택")
-        # select_all_button.setCheckable(True)
-        # checkboxes = []
-        
-        # # '전체 선택' 버튼 클릭 시 전체 클래스 목록을 toggle_all_classes 함수에 전달
-        # select_all_button.clicked.connect(
-        #     lambda checked: self.toggle_all_classes(checkboxes, checked, classes_list, select_all_button)
-        # )
-        # button_layout.addWidget(select_all_button)
-        # button_layout.addStretch(1)
-        # layout.addLayout(button_layout)
-        
-        # # classes_list의 요소가 리스트라고 가정하고 직접 참조
-        # for class_data in classes_list:
-        #     checkbox = QCheckBox(class_data[2])
-        #     # lambda 함수를 통해 class_data(리스트 객체)와 state를 함께 전달
-        #     checkbox.stateChanged.connect(lambda state, data=class_data: self.toggle_class(data, state))
-        #     layout.addWidget(checkbox)
-        #     checkboxes.append(checkbox)
-
-        # button_box = QDialogButtonBox(QDialogButtonBox.Ok)
         self.coordinator.confirm_class_selection(self.selected_classes)
-        # button_box.accepted.connect(dialog.accept)
-        # layout.addWidget(button_box)
-        # dialog.setLayout(layout)
-        # self.dialog = dialog
-        # dialog.exec_()
         
     def toggle_all_classes(self, checkboxes, state, classes_list, button):
         if state:
-            # classes_list의 요소가 리스트이므로 frozenset으로 변환하여 저장
             self.selected_classes = classes_list
         else:
             self.selected_classes = []
@@ -239,7 +200,6 @@ class UIManager(QObject):
     def toggle_class(self, class_data, state):
         # 전달된 class_data가 리스트인지 확인
         if not isinstance(class_data, list):
-            print("경고: 리스트 객체가 아닌 데이터가 전달되었습니다.")
             return
 
         # 리스트(class_data)를 frozenset으로 변환하여 추가/삭제
@@ -249,55 +209,6 @@ class UIManager(QObject):
         else:
             self.selected_classes.remove(item_to_add)
             
-    # def start_semester_selection(self):
-    #     self.show_semester_selection([[self.year, self.hakgi]])
-        
-    # def show_semester_selection(self, semesters_list):
-    #     self.selected_semester = []
-    #     self.semesters_list = semesters_list  # 참조용으로 저장
-    #     dialog = QDialog(self.app.main_window)
-    #     dialog.setWindowTitle("Select Semester to Adapt")
-    #     layout = QVBoxLayout()
-
-    #     # 학기 선택 안내 라벨 추가
-    #     label = QLabel("학기를 선택해주세요:")
-    #     layout.addWidget(label)
-
-    #     checkboxes = []
-        
-    #     # 각 학기별 체크박스 생성
-    #     for idx, (year, hakgi) in enumerate(semesters_list):
-    #         semester_str = f"{year}-{hakgi}"
-    #         checkbox = QCheckBox(semester_str)
-    #         checkbox.stateChanged.connect(lambda state, semester=semester_str: self.toggle_semester(semester, state))
-    #         layout.addWidget(checkbox)
-    #         checkboxes.append(checkbox)
-
-    #     # 버튼 박스
-    #     button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-    #     button_box.accepted.connect(lambda: self.on_semester_selection_ok(dialog))
-    #     button_box.rejected.connect(dialog.reject)
-    #     layout.addWidget(button_box)
-        
-    #     dialog.setLayout(layout)
-    #     dialog.exec_()
-
-    # def toggle_semester(self, semester_str, state):
-    #     """학기 선택/해제를 처리하는 메서드"""
-    #     if state == 2:  # Qt.Checked
-    #         self.selected_semester.add(semester_str)
-    #     else:  # Qt.Unchecked
-    #         self.selected_semester.discard(semester_str)
-
-    # def on_semester_selection_ok(self, dialog):
-    #     """OK 버튼 클릭 시 처리"""
-    #     if self.selected_semester:  # 선택된 학기가 있는 경우에만
-    #         self.coordinator.start_file_exploration(self.selected_semester)
-    #         dialog.accept()
-    #     else:
-    #         # 선택된 학기가 없으면 경고 메시지
-    #         QMessageBox.warning(dialog, "경고", "최소 하나의 학기를 선택해주세요.")
-
     def thread_safe_update_progress(self, msg, percent, label_id="progress_label", bar_id="progress_bar"):
         QTimer.singleShot(0, lambda: self.update_progress(msg, percent, label_id, bar_id))
 

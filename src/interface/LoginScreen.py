@@ -76,9 +76,6 @@ class LoginScreen(QWidget):
         self.login_button = QPushButton("로그인")
         main_layout.addWidget(self.login_button)
 
-        # 로그인 데이터 로드
-        self.load_login_data()
-
         # 로딩 인디케이터를 위한 수평 레이아웃 (좌우 중앙 정렬)
         loading_layout = QHBoxLayout()
         loading_layout.setAlignment(Qt.AlignCenter)  # 좌우 중앙 정렬
@@ -98,14 +95,3 @@ class LoginScreen(QWidget):
         self.select_folder_button = QPushButton("폴더 선택")
         self.select_folder_button.setVisible(False)
         main_layout.addWidget(self.select_folder_button)
-
-    def load_login_data(self):
-        login_data = self.app.settings.load_login_data()
-        if login_data:
-            self.id_input.setText(login_data.get("id", ""))
-            year = str(login_data.get("year", ""))
-            if year in [self.year_combo.itemText(i) for i in range(self.year_combo.count())]:
-                self.year_combo.setCurrentText(year)
-            hakgi = login_data.get("hakgi", "")
-            if hakgi in [self.hakgi_combo.itemText(i) for i in range(self.hakgi_combo.count())]:
-                self.hakgi_combo.setCurrentText(hakgi)
