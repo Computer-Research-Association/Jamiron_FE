@@ -1,6 +1,4 @@
 import re
-import json
-import os
 from .translator import TextTranslator
 
 

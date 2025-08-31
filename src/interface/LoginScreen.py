@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
-    QProgressBar,
     QLabel,
     QGridLayout,
     QLineEdit,

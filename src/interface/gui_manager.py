@@ -2,17 +2,13 @@ import sys
 import os
 from PyQt5.QtWidgets import (
     QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
     QLabel,
     QFileDialog,
-    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QApplication,
     QTreeWidget,
     QTreeWidgetItem,
-    QMessageBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
 from .styles import get_dark_theme, get_light_theme

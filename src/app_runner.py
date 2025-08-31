@@ -66,8 +66,6 @@ class MainApp:
 
         self.splash.finish(self.main_window)
 
-        # 4. 워크플로우 코디네이터 (로직) - 수정된 부분
-        # 생성된 ClassifierManager를 주입
         self.workflow_coordinator = WorkflowCoordinator(
             self.settings
         )

@@ -1,5 +1,5 @@
 import os
-import fitz  # PyMuPDF
+import fitz
 
 try:
     from pptx import Presentation
@@ -150,40 +150,3 @@ class FileExtractor:
 
         except Exception as e:
             return ""
-
-    # def extract_metadata(self, file_path):
-    #     """파일에서 메타데이터를 추출합니다."""
-    #     metadata = {"author": "", "title": ""}
-
-    #     try:
-    #         ext = os.path.splitext(file_path)[1].lower()
-
-    #         if ext == ".pdf":
-    #             import fitz
-
-    #             with fitz.open(file_path) as doc:
-    #                 pdf_metadata = doc.metadata
-    #                 metadata["author"] = pdf_metadata.get("author", "")
-    #                 metadata["title"] = pdf_metadata.get("title", "")
-
-    #         elif ext == ".pptx":
-    #             from pptx import Presentation
-
-    #             prs = Presentation(file_path)
-    #             core_props = prs.core_properties
-    #             metadata["author"] = core_props.author or ""
-    #             metadata["title"] = core_props.title or ""
-
-    #         elif ext == ".docx":
-    #             from docx import Document
-
-    #             doc = Document(file_path)
-    #             core_props = doc.core_properties
-    #             metadata["author"] = doc.core_properties.author or ""
-    #             metadata["title"] = doc.core_properties.title or ""
-            
-    #         return metadata
-
-    #     except Exception as e:
-    #         print(f"Error extracting metadata from {file_path}: {e}")
-    #         return metadata

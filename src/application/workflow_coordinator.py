@@ -1,5 +1,3 @@
-# src/application/workflow_coordinator.py
-
 import os
 import threading
 import math
@@ -163,12 +161,6 @@ class WorkflowCoordinator(QObject):
         
         self.user_request = UserRequest(progress_callback=progress_callback)
         
-        # for data in selected_classes_list:
-        #     syllabuses_data.update(data)
-        # class_code = selected_classes_list[0].get('class_code')
-        # professor_name = selected_classes_list[0].get('professor_name')
-        
-        
         self.session_id = self.get_session_id()
         
         user_response = self.user_request.post_data(self.session_id, self.user_id, syllabuses_data, self.year, self.hakgi)
@@ -253,7 +245,6 @@ class WorkflowCoordinator(QObject):
         self.signals.exploration_status.emit(False)
 
     def cancel_classification(self):
-        # if hasattr(self.classifier_manager, 'clear_plan'):
         self.clear_plan()
         self.signals.progress.emit("작업이 취소되었습니다.", 0, "progress_label", "main_menu_progress_bar")
         self.signals.exploration_status.emit(False)
@@ -268,8 +259,6 @@ class WorkflowCoordinator(QObject):
                     yield os.path.join(root, file)
 
         file_list = list(scan_files())
-        total_files = len(file_list)
-        # self.classifier_manager.set_total_files(total_files)
         self.processed_steps = 0
         all_materials = []
 
@@ -292,7 +281,6 @@ class WorkflowCoordinator(QObject):
 
         self.processed_steps += 1
 
-        # metadata = self.file_extractor.extract_metadata(file_path)
         full_content, first_content, translated_content = "", "", ""
 
         try:
@@ -317,15 +305,6 @@ class WorkflowCoordinator(QObject):
             "rule_based_content": first_content,
         }
         return material_data
-
-    def _emit_progress(self, message):
-        total_steps = self.classifier_manager.total_files
-        percent = (self.processed_steps / total_steps) * 100 if total_steps > 0 else 0
-        display_percent = math.ceil(percent)
-        detailed_message = f"[{self.processed_steps}/{total_steps}] {message}"
-        self.signals.progress.emit(
-            detailed_message, display_percent, "progress_label", "main_menu_progress_bar"
-        )
 
     def get_main_menu_status(self, isLogin):
         login_ok = isLogin

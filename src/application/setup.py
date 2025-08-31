@@ -1,4 +1,3 @@
-# src/application/setup.py
 import os
 import json
 import re
@@ -47,9 +46,7 @@ class SetupController:
             self.login_request = SyllabusRequest(progress_callback=progress_callback)
             login_response = self.login_request.login(session_id, user_id, password, year, hakgi)
             login_success = login_response[0]
-            login_msg = login_response[1]
             self.classes_list = login_response[2]
-            # login_success = self.collector.login(user_id, password)
             if not login_success:
                 return None
 
