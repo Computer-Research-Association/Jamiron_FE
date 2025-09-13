@@ -12,13 +12,10 @@ pyinstaller ^
   --hidden-import "src" ^
   --hidden-import "src.main" ^
   --hidden-import "src.app_runner" ^
-  --collect-all sentence_transformers ^
-  --collect-all transformers ^
-  --collect-all torch ^
   --paths . ^
   --paths src ^
   --console ^
-  main_entry.py
+  main.py
 
 echo.
 echo ✅ 빌드 완료! 실행 파일은 dist\jamiron\ 폴더에 생성됩니다.
