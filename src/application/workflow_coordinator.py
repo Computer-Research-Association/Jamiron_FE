@@ -76,8 +76,6 @@ class WorkflowCoordinator(QObject):
                 session_path = self.settings.get_path("session_file")
                 with open(session_path, "w") as f:            
                     f.write(session_response[2])
-            else:
-                print("오류")
         
     def get_session_id(self):
         self.session_path = self.settings.get_path("session_file")

@@ -74,8 +74,7 @@ class LoginScreen(QWidget):
         # 로그인 버튼
         self.login_button = QPushButton("로그인")
         main_layout.addWidget(self.login_button)
-
-        # 로딩 인디케이터를 위한 수평 레이아웃 (좌우 중앙 정렬)
+        
         loading_layout = QHBoxLayout()
         loading_layout.setAlignment(Qt.AlignCenter)  # 좌우 중앙 정렬
         self.progress_bar = self.loadingIndicator
