@@ -101,12 +101,9 @@ class SyllabusRequest:
             response.raise_for_status()
 
             res_data = response.json()
-            
-            # msg = res_data.get("msg", "로그인 성공")
-            # percent = res_data.get("percent", 100)
+        
             message = res_data.get("message", "")
             syllabuses = res_data.get("syllabuses", "")
-            # self.update_progress(msg, percent)
 
             return [res_data.get("status") == 200, message, syllabuses]
 
